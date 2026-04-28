@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, ScrollView } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 
-import PRASHNAVALI from "@/data/prashnavali.json";
+import PRASHNAVALI from "../data/prashnavali.json";
 
 
 export default function PrashnavaliDetail() {
