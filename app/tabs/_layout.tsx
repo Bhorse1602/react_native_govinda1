@@ -2,7 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { getCurrentSessionUser } from "@/lib/auth-db";
 import { Redirect, Tabs } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, View, Text } from "react-native";
+import { ActivityIndicator, View, Text, BackHandler, Platform } from "react-native";
 
 export default function TabsLayout() {
   const [hasSession, setHasSession] = useState<boolean | null>(null);
@@ -25,6 +25,20 @@ export default function TabsLayout() {
       mounted = false;
     };
   }, []);
+
+  // Prevent hardware back navigation from tabs to auth screens on Android
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    if (hasSession !== true) return;
+
+    const onBack = () => {
+      // returning true prevents default back action
+      return true;
+    };
+
+    const sub = BackHandler.addEventListener("hardwareBackPress", onBack);
+    return () => sub.remove();
+  }, [hasSession]);
 
   if (hasSession === null) {
     return (
