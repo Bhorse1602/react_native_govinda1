@@ -2,19 +2,13 @@ import React from "react";
 import { FlatList, Text, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 
-const PRASHNAVALI_ITEMS = [
-  { id: "1", title: "संकट मोचन सीता", excerpt: "राम जी की स्तुति..." },
-  { id: "2", title: "अयोध्या के प्रश्न", excerpt: "राज्य और धर्म पर विचार..." },
-  { id: "3", title: "वनवास प्रश्न", excerpt: "वनवास का सार..." },
-  { id: "4", title: "किष्किन्धा प्रश्न", excerpt: "हनुमान और सुग्रीव की कथा..." },
-  { id: "5", title: "लंका विजय प्रश्न", excerpt: "लंका का विवरण..." },
-  { id: "6", title: "अन्तिम प्रश्न", excerpt: "समापन और सीताराम" },
-];
+import PRASHNAVALI from "@/data/prashnavali.json";
+
 
 export default function PrashnavaliTab() {
   const router = useRouter();
 
-  function renderItem({ item }: { item: typeof PRASHNAVALI_ITEMS[0] }) {
+  function renderItem({ item }: { item: any }) {
     return (
       <TouchableOpacity
         onPress={() => router.push(`/prashnavali/${item.id}`)}
