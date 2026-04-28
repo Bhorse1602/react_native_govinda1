@@ -307,8 +307,7 @@ export default function PrashnavaliTab() {
                 onLayout={(e) => onCellLayout(idx, e)}
                 style={[
                   styles.cell,
-                  { width: cellSize, height: cellSize, transform: [{ scale }], opacity },
-                  { borderColor: isBright ? "#f59e0b" : "#fcd34d", borderWidth },
+                  { width: cellSize, height: cellSize, transform: [{ scale }], opacity, borderColor: isBright ? "#f59e0b" : "#fcd34d", borderWidth: isBright ? 3 : 1 },
                 ]}
               >
                 <TouchableOpacity
