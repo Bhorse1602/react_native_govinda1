@@ -282,20 +282,7 @@ export default function PrashnavaliTab() {
     return "#6b7280"; // gray
   }
 
-  function overrideMapping(startIndex: number, chaupaiIndex: number) {
-    try {
-      if (startIndex >= 0 && startIndex < START_TO_CHAUPAI.length) {
-        START_TO_CHAUPAI[startIndex] = chaupaiIndex;
-        // update UI if currently shown
-        if (selectedResult && selectedResult.startIndex === startIndex) {
-          setSelectedResult({ ...selectedResult, chaupai: CHAUPAIS[chaupaiIndex] });
-        }
-        Alert.alert("मैपिंग अपडेटेड", `स्टार्ट इंडेक्स ${startIndex} अब चौंपाई #${CHAUPAIS[chaupaiIndex].id} के साथ मैप्ड है।`);
-      }
-    } catch (e) {
-      Alert.alert("त्रुटि", "मैपिंग अपडेट करते समय त्रुटि हुई।");
-    }
-  }
+  
 
   async function handleShare() {
     if (!selectedResult) return;
@@ -391,24 +378,6 @@ export default function PrashnavaliTab() {
 
                   <Text style={[styles.explanationTitle, { fontFamily: "NotoSansDevanagari_700Bold" }]}>व्याख्या</Text>
                   <Text style={[styles.explanation, { fontFamily: "NotoSansDevanagari_400Regular" }]}>{selectedResult.chaupai.meaning}</Text>
-
-                  {/* Debug & mapping helper */}
-                  <View style={{ marginTop: 10, padding: 8, borderRadius: 8, backgroundColor: "#fffbeb" }}>
-                    <Text style={{ fontFamily: "NotoSansDevanagari_700Bold", color: "#92400e", marginBottom: 6 }}>Debug (परिक्षण)</Text>
-                    <Text style={{ fontFamily: "NotoSansDevanagari_400Regular", color: "#374151" }}>Start index: {selectedResult.startIndex}</Text>
-                    <Text style={{ fontFamily: "NotoSansDevanagari_400Regular", color: "#374151" }}>Formed: {selectedResult.formed}</Text>
-                    <Text style={{ fontFamily: "NotoSansDevanagari_400Regular", color: "#374151", marginBottom: 8 }}>Mapped chaupai: #{selectedResult.chaupai.id} — {selectedResult.chaupai.devanagari}</Text>
-
-                    <Text style={{ fontFamily: "NotoSansDevanagari_700Bold", color: "#92400e", marginBottom: 6 }}>If incorrect, map this start index to:</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexDirection: "row" }}>
-                      {CHAUPAIS.map((c, ci) => (
-                        <TouchableOpacity key={`map-${ci}`} onPress={() => overrideMapping(selectedResult.startIndex, ci)} style={{ padding: 8, backgroundColor: "#fff", borderRadius: 8, marginRight: 8, borderWidth: 1, borderColor: "#fde68a" }}>
-                          <Text style={{ fontFamily: "NotoSansDevanagari_400Regular", color: "#92400e" }}>#{c.id}</Text>
-                          <Text style={{ fontFamily: "NotoSansDevanagari_400Regular", fontSize: 11, color: "#374151", maxWidth: 140 }}>{c.devanagari}</Text>
-                        </TouchableOpacity>
-                      ))}
-                    </ScrollView>
-                  </View>
 
                   <View style={styles.modalButtons}>
                     <TouchableOpacity onPress={handleShare} style={styles.actionButton}>
