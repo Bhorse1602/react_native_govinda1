@@ -8,8 +8,8 @@ export default function TabsLayout() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: false,
-        tabBarActiveTintColor: "#2563eb",
-        tabBarInactiveTintColor: "#94a3b8",
+        tabBarActiveTintColor: "#b45309",
+        tabBarInactiveTintColor: "#9a7b5f",
         tabBarStyle: {
           position: "absolute",
           left: 20,
@@ -18,18 +18,18 @@ export default function TabsLayout() {
           height: 74,
           borderTopWidth: 0,
           borderRadius: 28,
-          backgroundColor: "#ffffff",
+          backgroundColor: "#fff7ed",
           paddingHorizontal: 14,
           paddingTop: 12,
           paddingBottom: 12,
           elevation: 0,
-          shadowColor: "#0f172a",
+          shadowColor: "#7c2d12",
           shadowOffset: { width: 0, height: 10 },
-          shadowOpacity: 0.12,
-          shadowRadius: 20,
+          shadowOpacity: 0.16,
+          shadowRadius: 24,
         },
         sceneStyle: {
-          backgroundColor: "#f8fafc",
+          backgroundColor: "#fff7ed",
         },
         tabBarIcon: ({ color, focused }) => {
           const iconName =
@@ -57,7 +57,7 @@ export default function TabsLayout() {
                 borderRadius: 18,
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: focused ? "#dbeafe" : "transparent",
+                backgroundColor: focused ? "#fed7aa" : "transparent",
               }}
             >
               <Ionicons name={iconName} size={24} color={color} />
