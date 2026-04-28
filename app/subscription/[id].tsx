@@ -6,13 +6,28 @@ export default function SubscriptionDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
   return (
-    <View className="flex-1 items-center justify-center bg-white px-6">
-      <Text className="mb-3 text-3xl font-bold text-blue-600">
-        Subscription Details
-      </Text>
-      <Text className="text-center text-base text-gray-600">
-        Viewing subscription ID: {id}
-      </Text>
+    <View className="flex-1 bg-orange-50 px-6 pt-16">
+      <View className="rounded-[30px] border border-orange-200 bg-white/85 px-6 py-8">
+        <Text
+          className="mb-2 text-sm uppercase tracking-[3px] text-orange-700"
+          style={{ fontFamily: "Manrope" }}
+        >
+          Subscription Detail
+        </Text>
+        <Text
+          className="mb-4 text-3xl text-orange-950"
+          style={{ fontFamily: "Sora" }}
+        >
+          Plan #{id}
+        </Text>
+        <Text
+          className="text-base leading-7 text-orange-900/80"
+          style={{ fontFamily: "Manrope" }}
+        >
+          Viewing the selected subscription route with the same warm saffron
+          presentation as the rest of the app.
+        </Text>
+      </View>
     </View>
   );
 }
