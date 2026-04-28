@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  Alert,
   Pressable,
   ScrollView,
   Text,
@@ -7,7 +8,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
+import { createUser } from "@/lib/auth-db";
 
 const genderOptions = ["Male", "Female", "Other"];
 const sampradayOptions = ["Gaudiya", "Ramanandi", "Madhva", "Sri Vaishnava"];
@@ -35,8 +37,82 @@ function FormInput(props: React.ComponentProps<typeof TextInput>) {
 }
 
 export default function SignUp() {
+  const [fullName, setFullName] = useState("");
+  const [userId, setUserId] = useState("");
+  const [age, setAge] = useState("");
   const [gender, setGender] = useState("Male");
   const [sampraday, setSampraday] = useState("Gaudiya");
+  const [dob, setDob] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleCreateAccount() {
+    const trimmedName = fullName.trim();
+    const trimmedUserId = userId.trim();
+    const parsedAge = Number(age);
+
+    if (
+      !trimmedName ||
+      !trimmedUserId ||
+      !age.trim() ||
+      !dob.trim() ||
+      !password ||
+      !confirmPassword
+    ) {
+      Alert.alert("Missing details", "Please fill all required fields.");
+      return;
+    }
+
+    if (!Number.isFinite(parsedAge) || parsedAge <= 0) {
+      Alert.alert("Invalid age", "Please enter a valid age.");
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert(
+        "Weak password",
+        "Password should be at least 6 characters long."
+      );
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert("Password mismatch", "Passwords do not match.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      await createUser({
+        fullName: trimmedName,
+        userId: trimmedUserId,
+        age: parsedAge,
+        gender,
+        sampraday,
+        dob,
+        password,
+      });
+
+      Alert.alert("Account created", "You can now sign in with your user ID.", [
+        {
+          text: "Continue",
+          onPress: () =>
+            router.push({
+              pathname: "/auth/sign-in",
+              params: { userId: trimmedUserId },
+            }),
+        },
+      ]);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not create account.";
+      Alert.alert("Sign up failed", message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <ScrollView
@@ -68,7 +144,11 @@ export default function SignUp() {
         <View className="gap-y-5">
           <View>
             <FormLabel>Full Name</FormLabel>
-            <FormInput placeholder="Enter your name" />
+            <FormInput
+              placeholder="Enter your name"
+              value={fullName}
+              onChangeText={setFullName}
+            />
           </View>
 
           <View>
@@ -76,12 +156,19 @@ export default function SignUp() {
             <FormInput
               placeholder="Choose a unique user ID"
               autoCapitalize="none"
+              value={userId}
+              onChangeText={setUserId}
             />
           </View>
 
           <View>
             <FormLabel>Age</FormLabel>
-            <FormInput placeholder="Enter your age" keyboardType="number-pad" />
+            <FormInput
+              placeholder="Enter your age"
+              keyboardType="number-pad"
+              value={age}
+              onChangeText={setAge}
+            />
           </View>
 
           <View>
@@ -142,26 +229,45 @@ export default function SignUp() {
 
           <View>
             <FormLabel>Date of Birth</FormLabel>
-            <FormInput placeholder="DD / MM / YYYY" keyboardType="number-pad" />
+            <FormInput
+              placeholder="DD / MM / YYYY"
+              keyboardType="number-pad"
+              value={dob}
+              onChangeText={setDob}
+            />
           </View>
 
           <View>
             <FormLabel>Password</FormLabel>
-            <FormInput placeholder="Create password" secureTextEntry />
+            <FormInput
+              placeholder="Create password"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
           </View>
 
           <View>
             <FormLabel>Confirm Password</FormLabel>
-            <FormInput placeholder="Re-enter password" secureTextEntry />
+            <FormInput
+              placeholder="Re-enter password"
+              secureTextEntry
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
           </View>
         </View>
 
-        <TouchableOpacity className="mt-8 rounded-[24px] bg-orange-500 px-6 py-4 active:bg-orange-600">
+        <TouchableOpacity
+          onPress={handleCreateAccount}
+          disabled={isSubmitting}
+          className="mt-8 rounded-[24px] bg-orange-500 px-6 py-4 active:bg-orange-600 disabled:opacity-60"
+        >
           <Text
             className="text-center text-lg text-white"
             style={{ fontFamily: "Sora" }}
           >
-            Create Account
+            {isSubmitting ? "Creating Account..." : "Create Account"}
           </Text>
         </TouchableOpacity>
 

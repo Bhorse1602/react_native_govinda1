@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import {
+  Alert,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { Link } from "expo-router";
+import { Link, router, useLocalSearchParams } from "expo-router";
+import { setCurrentSession, signInWithCredentials } from "@/lib/auth-db";
 
 function FormLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -31,6 +33,42 @@ function FormInput(props: React.ComponentProps<typeof TextInput>) {
 }
 
 export default function SignIn() {
+  const params = useLocalSearchParams<{ userId?: string }>();
+  const [userId, setUserId] = useState(params.userId ?? "");
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleLogin() {
+    if (!userId.trim() || !password) {
+      Alert.alert("Missing details", "Enter your user ID and password.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const user = await signInWithCredentials(userId, password);
+
+      if (!user) {
+        Alert.alert("Login failed", "Invalid user ID or password.");
+        return;
+      }
+
+      await setCurrentSession(user.user_id);
+
+      Alert.alert("Welcome", `Signed in as ${user.full_name}.`, [
+        {
+          text: "Continue",
+          onPress: () => router.replace("/tabs"),
+        },
+      ]);
+    } catch {
+      Alert.alert("Login failed", "Something went wrong while signing in.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <ScrollView
       className="flex-1 bg-orange-50"
@@ -63,21 +101,32 @@ export default function SignIn() {
             <FormInput
               placeholder="Enter your user ID"
               autoCapitalize="none"
+              value={userId}
+              onChangeText={setUserId}
             />
           </View>
 
           <View>
             <FormLabel>Password</FormLabel>
-            <FormInput placeholder="Enter your password" secureTextEntry />
+            <FormInput
+              placeholder="Enter your password"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
           </View>
         </View>
 
-        <TouchableOpacity className="mt-8 rounded-[24px] bg-orange-500 px-6 py-4 active:bg-orange-600">
+        <TouchableOpacity
+          onPress={handleLogin}
+          disabled={isSubmitting}
+          className="mt-8 rounded-[24px] bg-orange-500 px-6 py-4 active:bg-orange-600 disabled:opacity-60"
+        >
           <Text
             className="text-center text-lg text-white"
             style={{ fontFamily: "Sora" }}
           >
-            Login
+            {isSubmitting ? "Logging In..." : "Login"}
           </Text>
         </TouchableOpacity>
 
