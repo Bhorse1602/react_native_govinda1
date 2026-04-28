@@ -66,51 +66,68 @@ function normalizeText(s: string) {
   return (s || "").toString().replace(/[\s\u0964\u0965\.,;:!\?\-–—"'«»]/g, "").toLowerCase();
 }
 
-// Precompute a mapping from startIndex -> chaupai index when possible.
+// Precompute a mapping from startIndex -> chaupai index using best-match (LCS similarity)
 const START_TO_CHAUPAI: number[] = (() => {
   const map: number[] = Array(GRID_15x15.length).fill(-1);
   const norms = CHAUPAIS.map((c) => ({ ...c, norm: normalizeText(c.devanagari) }));
+
+  function lcsLength(a: string, b: string) {
+    const n = a.length, m = b.length;
+    if (n === 0 || m === 0) return 0;
+    const dp: number[][] = Array(n + 1)
+      .fill(0)
+      .map(() => Array(m + 1).fill(0));
+    for (let i = 1; i <= n; i++) {
+      for (let j = 1; j <= m; j++) {
+        if (a[i - 1] === b[j - 1]) dp[i][j] = dp[i - 1][j - 1] + 1;
+        else dp[i][j] = dp[i - 1][j] > dp[i][j - 1] ? dp[i - 1][j] : dp[i][j - 1];
+      }
+    }
+    return dp[n][m];
+  }
 
   for (let i = 0; i < GRID_15x15.length; i++) {
     const formed = computeSequenceFromIndex(i);
     const nFormed = normalizeText(formed);
 
-    // Try direct substring/equality match with chaupai devanagari text
-    let found = -1;
+    // Exact or substring match prefered
+    let bestIndex = -1;
     for (let j = 0; j < norms.length; j++) {
       const nc = norms[j].norm;
       if (!nc) continue;
       if (nFormed === nc || nFormed.includes(nc) || nc.includes(nFormed)) {
-        found = j;
+        bestIndex = j;
         break;
       }
     }
 
-    // Fallback: deterministic hash to keep mapping stable
-    if (found === -1) {
-      let hash = 0;
-      for (let k = 0; k < nFormed.length; k++) {
-        hash = (hash * 31 + nFormed.charCodeAt(k)) >>> 0;
+    if (bestIndex === -1) {
+      // compute LCS similarity and pick best
+      let bestScore = -1;
+      for (let j = 0; j < norms.length; j++) {
+        const nc = norms[j].norm;
+        if (!nc) continue;
+        const lcs = lcsLength(nFormed, nc);
+        // normalize by chaupai length to prefer full matches
+        const score = nc.length > 0 ? lcs / nc.length : 0;
+        if (score > bestScore) {
+          bestScore = score;
+          bestIndex = j;
+        }
       }
-      found = hash % CHAUPAIS.length;
+      // if bestScore is very low, still pick bestIndex (keeps deterministic)
     }
 
-    map[i] = found;
+    map[i] = bestIndex >= 0 ? bestIndex : 0;
   }
+
   return map;
 })();
 
 function pickChaupaiForStartIndex(startIndex: number, formed?: string) {
   const idx = START_TO_CHAUPAI[startIndex];
   if (idx != null && idx >= 0 && idx < CHAUPAIS.length) return CHAUPAIS[idx];
-
-  // safety fallback: use hash of formed string
-  if (formed) {
-    let hash = 0;
-    for (let i = 0; i < formed.length; i++) hash = (hash * 31 + formed.charCodeAt(i)) >>> 0;
-    return CHAUPAIS[hash % CHAUPAIS.length];
-  }
-
+  // fallback
   return CHAUPAIS[0];
 }
 
