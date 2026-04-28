@@ -96,10 +96,10 @@ export default function TabsLayout() {
                 ? focused
                   ? "home"
                   : "home-outline"
-                : route.name === "subscription"
+                : route.name === "prashnavali"
                   ? focused
-                    ? "card"
-                    : "card-outline"
+                    ? "book"
+                    : "book-outline"
                   : route.name === "insights"
                     ? focused
                       ? "analytics"
@@ -132,9 +132,9 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
-          name="subscription"
+          name="prashnavali"
           options={{
-            title: "Subscription",
+            title: "प्रश्नावली",
           }}
         />
         <Tabs.Screen
