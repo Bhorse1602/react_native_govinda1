@@ -1,21 +1,48 @@
 import {
   clearCurrentSession,
+  getActiveChantSummary,
   getCurrentSessionUser,
+  type ChantSummary,
   type UserRecord,
 } from "@/lib/auth-db";
+import { getHindiDeityName } from "@/lib/deity-display";
 import "@/global.css";
+import { useIsFocused } from "@react-navigation/native";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 
+const QUOTES = [
+  {
+    text: "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन।",
+    source: "भगवद्गीता 2.47",
+  },
+  {
+    text: "योगः कर्मसु कौशलम्।",
+    source: "भगवद्गीता 2.50",
+  },
+  {
+    text: "मन चंगा तो कठौती में गंगा नहीं, राम नाम में ही शांति है।",
+    source: "रामचरितमानस भावार्थ",
+  },
+  {
+    text: "सिया राममय सब जग जानी।",
+    source: "रामचरितमानस",
+  },
+];
+
 export default function App() {
+  const isFocused = useIsFocused();
   const [currentUser, setCurrentUser] = useState<UserRecord | null>(null);
+  const [activeSummary, setActiveSummary] = useState<ChantSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [quoteIndex, setQuoteIndex] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -23,8 +50,20 @@ export default function App() {
     async function loadSession() {
       try {
         const user = await getCurrentSessionUser();
-        if (mounted) {
-          setCurrentUser(user ?? null);
+        if (!mounted) {
+          return;
+        }
+
+        setCurrentUser(user ?? null);
+
+        if (user) {
+          const summary = await getActiveChantSummary(user.user_id);
+          if (mounted) {
+            setActiveSummary(summary);
+            setQuoteIndex(Math.floor(Math.random() * QUOTES.length));
+          }
+        } else if (mounted) {
+          setActiveSummary(null);
         }
       } finally {
         if (mounted) {
@@ -33,12 +72,15 @@ export default function App() {
       }
     }
 
-    loadSession();
+    if (isFocused) {
+      setLoading(true);
+      loadSession();
+    }
 
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [isFocused]);
 
   async function handleLogout() {
     await clearCurrentSession();
@@ -54,77 +96,95 @@ export default function App() {
     );
   }
 
-  if (!currentUser) {
+  if (!currentUser || !activeSummary) {
     return null;
   }
 
+  const deityName = getHindiDeityName(activeSummary.deityName);
+
   return (
     <View className="flex-1 overflow-hidden bg-orange-50 px-6 pb-28 pt-16">
-      <View className="absolute -left-10 top-8 h-40 w-40 rounded-full bg-orange-200/60" />
-      <View className="absolute -right-8 top-28 h-32 w-32 rounded-full bg-amber-300/40" />
-
-      <View className="mb-6 rounded-[32px] border border-orange-200 bg-white/90 px-6 py-8">
+      <View className="mb-6 rounded-[28px] border border-orange-200 bg-white/90 px-6 py-7">
         <Text
           className="mb-2 text-sm uppercase tracking-[3px] text-orange-700"
-          style={{ fontFamily: "Manrope" }}
+          style={{ fontFamily: "NotoSansDevanagari_700Bold" }}
         >
-          Home
+          गृह
         </Text>
         <Text
-          className="mb-3 text-3xl text-orange-950"
-          style={{ fontFamily: "Sora" }}
+          className="mb-3 text-3xl font-bold text-orange-950"
+          style={{ fontFamily: "NotoSansDevanagari_700Bold" }}
         >
-          Jai Shri Ram, {currentUser.full_name}
+          जय {deityName}
         </Text>
         <Text
           className="text-base leading-7 text-orange-900/80"
-          style={{ fontFamily: "Manrope" }}
+          style={{ fontFamily: "NotoSansDevanagari_400Regular" }}
         >
-          Your account is active and this is now a working logged-in home page
-          for your daily devotional journey.
+          साधक: {currentUser.full_name}
+        </Text>
+        <Text
+          className="mt-4 text-base leading-7 text-orange-900/80"
+          style={{ fontFamily: "NotoSansDevanagari_400Regular" }}
+        >
+          {QUOTES[quoteIndex]?.text}
+        </Text>
+        <Text
+          className="mt-2 text-sm text-orange-700/80"
+          style={{ fontFamily: "NotoSansDevanagari_400Regular" }}
+        >
+          {QUOTES[quoteIndex]?.source}
         </Text>
       </View>
 
-      <View className="mb-5 rounded-[28px] bg-orange-900 px-6 py-6">
+      <Pressable
+        onPress={() => router.push("/tabs/naam-jaap")}
+        className="mb-5 min-h-44 justify-center rounded-[30px] bg-orange-600 px-7 py-8 active:opacity-90"
+      >
         <Text
-          className="mb-2 text-sm uppercase tracking-[2px] text-orange-200"
-          style={{ fontFamily: "Manrope" }}
+          className="text-center text-4xl font-bold text-white"
+          style={{ fontFamily: "NotoSansDevanagari_700Bold" }}
         >
-          Your Profile
+          नाम जप
         </Text>
         <Text
-          className="mb-1 text-xl text-orange-50"
-          style={{ fontFamily: "Sora" }}
+          className="mt-3 text-center text-lg text-orange-50"
+          style={{ fontFamily: "NotoSansDevanagari_400Regular" }}
         >
-          User ID: {currentUser.user_id}
+          {deityName}
         </Text>
+      </Pressable>
+
+      <Pressable
+        onPress={() => router.push("/tabs/prashnavali")}
+        className="mb-6 min-h-44 justify-center rounded-[30px] bg-amber-500 px-7 py-8 active:opacity-90"
+      >
+        <Text
+          className="text-center text-4xl font-bold text-orange-950"
+          style={{ fontFamily: "NotoSansDevanagari_700Bold" }}
+        >
+          प्रश्नावली
+        </Text>
+        <Text
+          className="mt-3 text-center text-lg text-orange-950/80"
+          style={{ fontFamily: "NotoSansDevanagari_400Regular" }}
+        >
+          राम शलाका
+        </Text>
+      </Pressable>
+
+      <View className="mb-5 rounded-[24px] bg-orange-900 px-6 py-5">
         <Text
           className="text-base leading-7 text-orange-100/85"
-          style={{ fontFamily: "Manrope" }}
+          style={{ fontFamily: "NotoSansDevanagari_400Regular" }}
         >
-          Age {currentUser.age} • {currentUser.gender} • {currentUser.sampraday}
+          कुल जप: {activeSummary.totalChants}
         </Text>
         <Text
           className="mt-1 text-base leading-7 text-orange-100/85"
-          style={{ fontFamily: "Manrope" }}
+          style={{ fontFamily: "NotoSansDevanagari_400Regular" }}
         >
-          Date of birth: {currentUser.dob}
-        </Text>
-      </View>
-
-      <View className="mb-5 rounded-[28px] border border-orange-200 bg-white/85 px-6 py-6">
-        <Text
-          className="mb-2 text-xl text-orange-950"
-          style={{ fontFamily: "Sora" }}
-        >
-          What you can do now
-        </Text>
-        <Text
-          className="text-base leading-7 text-orange-900/80"
-          style={{ fontFamily: "Manrope" }}
-        >
-          Explore insights, manage settings, and continue into subscription
-          flows from the tabs below.
+          कुल माला: {activeSummary.totalMalas}
         </Text>
       </View>
 
@@ -134,9 +194,9 @@ export default function App() {
       >
         <Text
           className="text-center text-lg text-orange-900"
-          style={{ fontFamily: "Sora" }}
+          style={{ fontFamily: "NotoSansDevanagari_700Bold" }}
         >
-          Logout
+          लॉगआउट
         </Text>
       </TouchableOpacity>
     </View>

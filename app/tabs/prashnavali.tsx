@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useRef } from "react";
+import { router } from "expo-router";
 import {
   View,
   Text,
@@ -304,8 +305,30 @@ export default function PrashnavaliTab() {
     setLastIndices(null);
   }
 
+  function goBackOrHome() {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace("/tabs");
+  }
+
+  function handleHomeFromResult() {
+    resetReading();
+    router.replace("/tabs");
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: "#fff7ed", paddingHorizontal: 16, paddingTop: 24, paddingBottom: 28 }}>
+      <View style={{ marginTop: 18, marginBottom: 10, flexDirection: "row", justifyContent: "flex-start" }}>
+        <TouchableOpacity
+          onPress={goBackOrHome}
+          style={{ borderRadius: 999, backgroundColor: "#ffedd5", paddingHorizontal: 14, paddingVertical: 8 }}
+        >
+          <Text style={{ fontFamily: "NotoSansDevanagari_700Bold", color: "#9a3412" }}>वापस</Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={{ alignItems: "center", marginBottom: 8 }}>
         <Text style={[styles.headerTitle, { fontFamily: "NotoSansDevanagari_700Bold" }]}>श्री राम शलाका प्रश्नावली</Text>
         <Text style={[styles.instructions, { fontFamily: "NotoSansDevanagari_400Regular" }]}>आँखें बंद करें, श्री राम का ध्यान करें, और किसी भी अक्षर को स्पर्श करें।</Text>
@@ -382,6 +405,9 @@ export default function PrashnavaliTab() {
                   <View style={styles.modalButtons}>
                     <TouchableOpacity onPress={handleShare} style={styles.actionButton}>
                       <Text style={{ color: "white", fontFamily: "NotoSansDevanagari_700Bold" }}>शेयर करें</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={handleHomeFromResult} style={[styles.actionButton, { backgroundColor: "#f97316" }]}>
+                      <Text style={{ color: "white", fontFamily: "NotoSansDevanagari_700Bold" }}>होम जाएं</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={resetReading} style={[styles.actionButton, { backgroundColor: "#f3f4f6" }] }>
                       <Text style={{ color: "#92400e", fontFamily: "NotoSansDevanagari_700Bold" }}>नई पठन</Text>

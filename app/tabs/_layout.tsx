@@ -1,12 +1,16 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { getCurrentSessionUser } from "@/lib/auth-db";
-import { Redirect, Tabs } from "expo-router";
+import { Redirect, Tabs, usePathname } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View, Text, BackHandler, Platform } from "react-native";
 
 export default function TabsLayout() {
+  const pathname = usePathname();
   const [hasSession, setHasSession] = useState<boolean | null>(null);
   const [currentUserFullName, setCurrentUserFullName] = useState<string | null>(null);
+  const showUserHeader =
+    pathname !== "/tabs/naam-jaap" && pathname !== "/tabs/prashnavali";
+  const hideTabBar = pathname === "/tabs/naam-jaap" || pathname === "/tabs/prashnavali";
 
   useEffect(() => {
     let mounted = true;
@@ -54,14 +58,15 @@ export default function TabsLayout() {
 
   return (
     <>
-      {/* Top user header shown above all tabs */}
-      <View className="absolute left-0 right-0 top-8 z-10 items-center">
-        <View className="rounded-full bg-white/90 px-4 py-2 shadow-sm">
-          <Text className="text-lg text-orange-900" style={{ fontFamily: "Sora" }}>
-            {currentUserFullName ? `साधक: ${currentUserFullName}` : ""}
-          </Text>
+      {showUserHeader ? (
+        <View className="absolute left-0 right-0 top-8 z-10 items-center">
+          <View className="rounded-full bg-white/90 px-4 py-2 shadow-sm">
+            <Text className="text-lg text-orange-900" style={{ fontFamily: "Sora" }}>
+              {currentUserFullName ? `साधक: ${currentUserFullName}` : ""}
+            </Text>
+          </View>
         </View>
-      </View>
+      ) : null}
 
       <Tabs
         screenOptions={({ route }) => ({
@@ -69,7 +74,11 @@ export default function TabsLayout() {
           tabBarShowLabel: false,
           tabBarActiveTintColor: "#b45309",
           tabBarInactiveTintColor: "#9a7b5f",
-          tabBarStyle: {
+          tabBarStyle: hideTabBar
+            ? {
+                display: "none",
+              }
+            : {
             position: "absolute",
             left: 20,
             right: 20,
@@ -135,6 +144,13 @@ export default function TabsLayout() {
           name="prashnavali"
           options={{
             title: "प्रश्नावली",
+          }}
+        />
+        <Tabs.Screen
+          name="naam-jaap"
+          options={{
+            href: null,
+            title: "नाम जप",
           }}
         />
         <Tabs.Screen
