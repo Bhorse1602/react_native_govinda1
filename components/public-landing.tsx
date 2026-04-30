@@ -14,19 +14,19 @@ export default function PublicLanding() {
           className="mb-3 text-center text-sm uppercase tracking-[3px] text-orange-700"
           style={{ fontFamily: "Manrope" }}
         >
-          Welcome
+          स्वागत
         </Text>
         <Text
           className="mb-4 text-center text-4xl text-orange-950"
           style={{ fontFamily: "Sora" }}
         >
-          Welcome to Govinda Naam jaap App
+          गोविन्द नाम जप ऐप में आपका स्वागत है
         </Text>
         <Text
           className="text-center text-base leading-7 text-orange-900/80"
           style={{ fontFamily: "Manrope" }}
         >
-          Join us and explore amazing features
+          भक्ति, जप और साधना के इस सरल पथ से जुड़िए
         </Text>
       </View>
 
@@ -35,13 +35,13 @@ export default function PublicLanding() {
           className="mb-2 text-sm uppercase tracking-[2px] text-orange-200"
           style={{ fontFamily: "Manrope" }}
         >
-          Start Here
+          प्रारम्भ करें
         </Text>
         <Text
           className="text-2xl text-orange-50"
           style={{ fontFamily: "Sora" }}
         >
-          Create an account or sign in to continue.
+          आगे बढ़ने के लिए खाता बनाइए या साइन इन कीजिए।
         </Text>
       </View>
 
@@ -52,7 +52,7 @@ export default function PublicLanding() {
               className="text-center text-lg text-white"
               style={{ fontFamily: "Sora" }}
             >
-              Create Account
+              खाता बनाइए
             </Text>
           </TouchableOpacity>
         </Link>
@@ -63,7 +63,7 @@ export default function PublicLanding() {
               className="text-center text-lg text-orange-900"
               style={{ fontFamily: "Sora" }}
             >
-              Sign In
+              साइन इन
             </Text>
           </TouchableOpacity>
         </Link>
@@ -73,7 +73,7 @@ export default function PublicLanding() {
         className="mt-8 text-center text-sm text-orange-800/75"
         style={{ fontFamily: "Manrope" }}
       >
-        Already have an account? Sign in above
+        यदि आपका खाता पहले से है, तो ऊपर साइन इन करें
       </Text>
     </View>
   );

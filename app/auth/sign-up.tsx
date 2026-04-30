@@ -11,8 +11,13 @@ import {
 import { Link, router } from "expo-router";
 import { createUser } from "@/lib/auth-db";
 
-const genderOptions = ["Male", "Female", "Other"];
-const sampradayOptions = ["Gaudiya", "Ramanandi", "Madhva", "Sri Vaishnava"];
+const genderOptions = ["पुरुष", "महिला", "अन्य"];
+const sampradayOptions = [
+  "गौड़ीय",
+  "रामानंदी",
+  "माध्व",
+  "श्री वैष्णव",
+];
 
 function FormLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -60,25 +65,25 @@ export default function SignUp() {
       !password ||
       !confirmPassword
     ) {
-      Alert.alert("Missing details", "Please fill all required fields.");
+      Alert.alert("अपूर्ण जानकारी", "कृपया सभी आवश्यक जानकारी भरें।");
       return;
     }
 
     if (!Number.isFinite(parsedAge) || parsedAge <= 0) {
-      Alert.alert("Invalid age", "Please enter a valid age.");
+      Alert.alert("गलत आयु", "कृपया सही आयु दर्ज करें।");
       return;
     }
 
     if (password.length < 6) {
       Alert.alert(
-        "Weak password",
-        "Password should be at least 6 characters long."
+        "कमज़ोर पासवर्ड",
+        "पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।"
       );
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert("Password mismatch", "Passwords do not match.");
+      Alert.alert("पासवर्ड मेल नहीं खाते", "दोनों पासवर्ड एक समान नहीं हैं।");
       return;
     }
 
@@ -95,9 +100,9 @@ export default function SignUp() {
         password,
       });
 
-      Alert.alert("Account created", "You can now sign in with your user ID.", [
+      Alert.alert("खाता बन गया", "अब आप अपनी यूज़र आईडी से साइन इन कर सकते हैं।", [
         {
-          text: "Continue",
+          text: "आगे बढ़ें",
           onPress: () =>
             router.push({
               pathname: "/auth/sign-in",
@@ -107,8 +112,8 @@ export default function SignUp() {
       ]);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Could not create account.";
-      Alert.alert("Sign up failed", message);
+        error instanceof Error ? error.message : "खाता नहीं बन पाया।";
+      Alert.alert("साइन अप असफल", message);
     } finally {
       setIsSubmitting(false);
     }
@@ -125,36 +130,35 @@ export default function SignUp() {
           className="mb-2 text-sm uppercase tracking-[3px] text-orange-700"
           style={{ fontFamily: "Manrope" }}
         >
-          Auth
+          पंजीकरण
         </Text>
         <Text
           className="mb-3 text-3xl text-orange-950"
           style={{ fontFamily: "Sora" }}
         >
-          Sign Up
+          साइन अप
         </Text>
         <Text
           className="mb-8 text-base leading-7 text-orange-900/80"
           style={{ fontFamily: "Manrope" }}
         >
-          Create your devotional profile and secure your account with a user ID
-          and password.
+          अपनी भक्ति-प्रोफ़ाइल बनाइए और यूज़र आईडी व पासवर्ड से खाता सुरक्षित कीजिए।
         </Text>
 
         <View className="gap-y-5">
           <View>
-            <FormLabel>Full Name</FormLabel>
+            <FormLabel>पूरा नाम</FormLabel>
             <FormInput
-              placeholder="Enter your name"
+              placeholder="अपना नाम लिखें"
               value={fullName}
               onChangeText={setFullName}
             />
           </View>
 
           <View>
-            <FormLabel>User ID</FormLabel>
+            <FormLabel>यूज़र आईडी</FormLabel>
             <FormInput
-              placeholder="Choose a unique user ID"
+              placeholder="एक अलग यूज़र आईडी चुनें"
               autoCapitalize="none"
               value={userId}
               onChangeText={setUserId}
@@ -162,9 +166,9 @@ export default function SignUp() {
           </View>
 
           <View>
-            <FormLabel>Age</FormLabel>
+            <FormLabel>आयु</FormLabel>
             <FormInput
-              placeholder="Enter your age"
+              placeholder="अपनी आयु लिखें"
               keyboardType="number-pad"
               value={age}
               onChangeText={setAge}
@@ -172,7 +176,7 @@ export default function SignUp() {
           </View>
 
           <View>
-            <FormLabel>Gender</FormLabel>
+            <FormLabel>लिंग</FormLabel>
             <View className="flex-row flex-wrap gap-3">
               {genderOptions.map((option) => {
                 const selected = gender === option;
@@ -200,7 +204,7 @@ export default function SignUp() {
           </View>
 
           <View>
-            <FormLabel>Sampraday</FormLabel>
+            <FormLabel>सम्प्रदाय</FormLabel>
             <View className="flex-row flex-wrap gap-3">
               {sampradayOptions.map((option) => {
                 const selected = sampraday === option;
@@ -228,7 +232,7 @@ export default function SignUp() {
           </View>
 
           <View>
-            <FormLabel>Date of Birth</FormLabel>
+            <FormLabel>जन्म तिथि</FormLabel>
             <FormInput
               placeholder="DD / MM / YYYY"
               keyboardType="number-pad"
@@ -238,9 +242,9 @@ export default function SignUp() {
           </View>
 
           <View>
-            <FormLabel>Password</FormLabel>
+            <FormLabel>पासवर्ड</FormLabel>
             <FormInput
-              placeholder="Create password"
+              placeholder="पासवर्ड बनाइए"
               secureTextEntry
               value={password}
               onChangeText={setPassword}
@@ -248,9 +252,9 @@ export default function SignUp() {
           </View>
 
           <View>
-            <FormLabel>Confirm Password</FormLabel>
+            <FormLabel>पासवर्ड की पुष्टि</FormLabel>
             <FormInput
-              placeholder="Re-enter password"
+              placeholder="पासवर्ड फिर से लिखें"
               secureTextEntry
               value={confirmPassword}
               onChangeText={setConfirmPassword}
@@ -266,8 +270,8 @@ export default function SignUp() {
           <Text
             className="text-center text-lg text-white"
             style={{ fontFamily: "Sora" }}
-          >
-            {isSubmitting ? "Creating Account..." : "Create Account"}
+        >
+            {isSubmitting ? "खाता बन रहा है..." : "खाता बनाइए"}
           </Text>
         </TouchableOpacity>
 
@@ -277,7 +281,7 @@ export default function SignUp() {
               className="text-center text-base text-orange-900"
               style={{ fontFamily: "Sora" }}
             >
-              Already have a user ID? Sign In
+              यदि यूज़र आईडी है, तो साइन इन करें
             </Text>
           </TouchableOpacity>
         </Link>
@@ -288,7 +292,7 @@ export default function SignUp() {
               className="text-center text-sm text-orange-800/80"
               style={{ fontFamily: "Manrope" }}
             >
-              Back to Home
+              मुख्य पृष्ठ पर जाएँ
             </Text>
           </TouchableOpacity>
         </Link>

@@ -1,6 +1,6 @@
 import React from "react";
-import { View, Text, ScrollView } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
 
 import PRASHNAVALI from "../data/prashnavali.json";
 
@@ -12,6 +12,23 @@ export default function PrashnavaliDetail() {
 
   return (
     <ScrollView className="flex-1 bg-orange-50 px-6 pt-16 pb-28">
+      <View className="mb-4">
+        <TouchableOpacity
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+              return;
+            }
+            router.replace("/tabs");
+          }}
+          className="self-start rounded-full bg-orange-100 px-4 py-2"
+        >
+          <Text className="text-orange-900" style={{ fontFamily: "NotoSansDevanagari_700Bold" }}>
+            वापस
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       <View className="rounded-[30px] border border-orange-200 bg-white/85 px-6 py-8">
         <Text className="mb-2 text-sm uppercase tracking-[3px] text-orange-700" style={{ fontFamily: "NotoSansDevanagari_400Regular" }}>
           प्रश्नावली

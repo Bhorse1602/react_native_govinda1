@@ -40,7 +40,7 @@ export default function SignIn() {
 
   async function handleLogin() {
     if (!userId.trim() || !password) {
-      Alert.alert("Missing details", "Enter your user ID and password.");
+      Alert.alert("अपूर्ण जानकारी", "कृपया यूज़र आईडी और पासवर्ड भरें।");
       return;
     }
 
@@ -50,20 +50,20 @@ export default function SignIn() {
       const user = await signInWithCredentials(userId, password);
 
       if (!user) {
-        Alert.alert("Login failed", "Invalid user ID or password.");
+        Alert.alert("लॉगिन असफल", "यूज़र आईडी या पासवर्ड सही नहीं है।");
         return;
       }
 
       await setCurrentSession(user.user_id);
 
-      Alert.alert("Welcome", `Signed in as ${user.full_name}.`, [
+      Alert.alert("स्वागत है", `${user.full_name} के रूप में लॉगिन हुआ।`, [
         {
-          text: "Continue",
+          text: "आगे बढ़ें",
           onPress: () => router.replace("/tabs"),
         },
       ]);
     } catch {
-      Alert.alert("Login failed", "Something went wrong while signing in.");
+      Alert.alert("लॉगिन असफल", "साइन इन करते समय कुछ गड़बड़ हुई।");
     } finally {
       setIsSubmitting(false);
     }
@@ -80,26 +80,26 @@ export default function SignIn() {
           className="mb-2 text-sm uppercase tracking-[3px] text-orange-700"
           style={{ fontFamily: "Manrope" }}
         >
-          Auth
+          प्रवेश
         </Text>
         <Text
           className="mb-3 text-3xl text-orange-950"
           style={{ fontFamily: "Sora" }}
         >
-          Sign In
+          साइन इन
         </Text>
         <Text
           className="mb-8 text-base leading-7 text-orange-900/80"
           style={{ fontFamily: "Manrope" }}
         >
-          Sign in using your user ID and password.
+          अपनी यूज़र आईडी और पासवर्ड से प्रवेश करें।
         </Text>
 
         <View className="gap-y-5">
           <View>
-            <FormLabel>User ID</FormLabel>
+            <FormLabel>यूज़र आईडी</FormLabel>
             <FormInput
-              placeholder="Enter your user ID"
+              placeholder="अपनी यूज़र आईडी लिखें"
               autoCapitalize="none"
               value={userId}
               onChangeText={setUserId}
@@ -107,9 +107,9 @@ export default function SignIn() {
           </View>
 
           <View>
-            <FormLabel>Password</FormLabel>
+            <FormLabel>पासवर्ड</FormLabel>
             <FormInput
-              placeholder="Enter your password"
+              placeholder="अपना पासवर्ड लिखें"
               secureTextEntry
               value={password}
               onChangeText={setPassword}
@@ -125,8 +125,8 @@ export default function SignIn() {
           <Text
             className="text-center text-lg text-white"
             style={{ fontFamily: "Sora" }}
-          >
-            {isSubmitting ? "Logging In..." : "Login"}
+        >
+            {isSubmitting ? "लॉगिन हो रहा है..." : "लॉगिन"}
           </Text>
         </TouchableOpacity>
 
@@ -136,7 +136,7 @@ export default function SignIn() {
               className="text-center text-base text-orange-900"
               style={{ fontFamily: "Sora" }}
             >
-              New here? Create Account
+              नए हैं? खाता बनाइए
             </Text>
           </TouchableOpacity>
         </Link>
@@ -147,7 +147,7 @@ export default function SignIn() {
               className="text-center text-sm text-orange-800/80"
               style={{ fontFamily: "Manrope" }}
             >
-              Back to Home
+              मुख्य पृष्ठ पर जाएँ
             </Text>
           </TouchableOpacity>
         </Link>
