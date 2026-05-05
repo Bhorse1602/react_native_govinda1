@@ -7,8 +7,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Link, router, useLocalSearchParams } from "expo-router";
-import { setCurrentSession, signInWithCredentials } from "@/lib/auth-db";
+import { Link, router } from "expo-router";
+import { setCurrentSession, signInWithMobileAndPassword } from "@/lib/auth-db";
+import { useLanguage } from "@/lib/language-context";
 
 function FormLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -33,37 +34,67 @@ function FormInput(props: React.ComponentProps<typeof TextInput>) {
 }
 
 export default function SignIn() {
-  const params = useLocalSearchParams<{ userId?: string }>();
-  const [userId, setUserId] = useState(params.userId ?? "");
+  const { language } = useLanguage();
+  const [mobileNumber, setMobileNumber] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleLogin() {
-    if (!userId.trim() || !password) {
-      Alert.alert("अपूर्ण जानकारी", "कृपया यूज़र आईडी और पासवर्ड भरें।");
+    if (!mobileNumber.trim() || !password) {
+      Alert.alert(
+        language === "hi" ? "अपूर्ण जानकारी" : "Missing information",
+        language === "hi"
+          ? "कृपया मोबाइल नंबर और पासवर्ड भरें।"
+          : "Please enter mobile number and password."
+      );
+      return;
+    }
+
+    if (!/^[0-9]{10}$/.test(mobileNumber.trim())) {
+      Alert.alert(
+        language === "hi" ? "गलत मोबाइल नंबर" : "Invalid mobile number",
+        language === "hi"
+          ? "कृपया 10 अंकों का सही मोबाइल नंबर दर्ज करें।"
+          : "Please enter a valid 10-digit mobile number."
+      );
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const user = await signInWithCredentials(userId, password);
+      const user = await signInWithMobileAndPassword(mobileNumber, password);
 
       if (!user) {
-        Alert.alert("लॉगिन असफल", "यूज़र आईडी या पासवर्ड सही नहीं है।");
+        Alert.alert(
+          language === "hi" ? "लॉगिन असफल" : "Login failed",
+          language === "hi"
+            ? "मोबाइल नंबर या पासवर्ड सही नहीं है।"
+            : "Mobile number or password is incorrect."
+        );
         return;
       }
 
       await setCurrentSession(user.user_id);
 
-      Alert.alert("स्वागत है", `${user.full_name} के रूप में लॉगिन हुआ।`, [
+      Alert.alert(
+        language === "hi" ? "स्वागत है" : "Welcome",
+        language === "hi"
+          ? `${user.full_name} के रूप में लॉगिन हुआ।`
+          : `Logged in as ${user.full_name}.`,
+        [
         {
-          text: "आगे बढ़ें",
+          text: language === "hi" ? "आगे बढ़ें" : "Continue",
           onPress: () => router.replace("/tabs"),
         },
       ]);
     } catch {
-      Alert.alert("लॉगिन असफल", "साइन इन करते समय कुछ गड़बड़ हुई।");
+      Alert.alert(
+        language === "hi" ? "लॉगिन असफल" : "Login failed",
+        language === "hi"
+          ? "साइन इन करते समय कुछ गड़बड़ हुई।"
+          : "Something went wrong while signing in."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -80,36 +111,43 @@ export default function SignIn() {
           className="mb-2 text-sm uppercase tracking-[3px] text-orange-700"
           style={{ fontFamily: "Manrope" }}
         >
-          प्रवेश
+          {language === "hi" ? "प्रवेश" : "Access"}
         </Text>
         <Text
           className="mb-3 text-3xl text-orange-950"
           style={{ fontFamily: "Sora" }}
         >
-          साइन इन
+          {language === "hi" ? "साइन इन" : "Sign In"}
         </Text>
         <Text
           className="mb-8 text-base leading-7 text-orange-900/80"
           style={{ fontFamily: "Manrope" }}
         >
-          अपनी यूज़र आईडी और पासवर्ड से प्रवेश करें।
+          {language === "hi"
+            ? "अपने मोबाइल नंबर और पासवर्ड से प्रवेश करें।"
+            : "Sign in with your mobile number and password."}
         </Text>
 
         <View className="gap-y-5">
           <View>
-            <FormLabel>यूज़र आईडी</FormLabel>
+            <FormLabel>{language === "hi" ? "मोबाइल नंबर" : "Mobile Number"}</FormLabel>
             <FormInput
-              placeholder="अपनी यूज़र आईडी लिखें"
-              autoCapitalize="none"
-              value={userId}
-              onChangeText={setUserId}
+              placeholder={
+                language === "hi"
+                  ? "अपना 10 अंकों का मोबाइल नंबर लिखें"
+                  : "Enter your 10-digit mobile number"
+              }
+              keyboardType="phone-pad"
+              value={mobileNumber}
+              onChangeText={setMobileNumber}
+              maxLength={10}
             />
           </View>
 
           <View>
-            <FormLabel>पासवर्ड</FormLabel>
+            <FormLabel>{language === "hi" ? "पासवर्ड" : "Password"}</FormLabel>
             <FormInput
-              placeholder="अपना पासवर्ड लिखें"
+              placeholder={language === "hi" ? "अपना पासवर्ड लिखें" : "Enter password"}
               secureTextEntry
               value={password}
               onChangeText={setPassword}
@@ -126,7 +164,13 @@ export default function SignIn() {
             className="text-center text-lg text-white"
             style={{ fontFamily: "Sora" }}
         >
-            {isSubmitting ? "लॉगिन हो रहा है..." : "लॉगिन"}
+            {isSubmitting
+              ? language === "hi"
+                ? "लॉगिन हो रहा है..."
+                : "Signing in..."
+              : language === "hi"
+                ? "लॉगिन"
+                : "Sign In"}
           </Text>
         </TouchableOpacity>
 
@@ -136,7 +180,7 @@ export default function SignIn() {
               className="text-center text-base text-orange-900"
               style={{ fontFamily: "Sora" }}
             >
-              नए हैं? खाता बनाइए
+              {language === "hi" ? "नए हैं? खाता बनाइए" : "New here? Create account"}
             </Text>
           </TouchableOpacity>
         </Link>
@@ -147,7 +191,7 @@ export default function SignIn() {
               className="text-center text-sm text-orange-800/80"
               style={{ fontFamily: "Manrope" }}
             >
-              मुख्य पृष्ठ पर जाएँ
+              {language === "hi" ? "मुख्य पृष्ठ पर जाएँ" : "Go to home page"}
             </Text>
           </TouchableOpacity>
         </Link>

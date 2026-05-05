@@ -1,8 +1,47 @@
 import { Link } from "expo-router";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
+import { AppLanguage, useLanguage } from "@/lib/language-context";
+
+const landingCopy: Record<
+  AppLanguage,
+  {
+    appTitle: string;
+    subtitle: string;
+    startLabel: string;
+    startDescription: string;
+    signUp: string;
+    signIn: string;
+    helper: string;
+    languageLabel: string;
+  }
+> = {
+  en: {
+    appTitle: "Ramanandi Naam Jaap Counter",
+    subtitle: "Join this simple path of devotion, chanting, and spiritual practice",
+    startLabel: "Get Started",
+    startDescription: "Create an account or sign in to continue.",
+    signUp: "Create Account",
+    signIn: "Sign In",
+    helper: "If you already have an account, sign in above",
+    languageLabel: "Choose Language",
+  },
+  hi: {
+    appTitle: "Ramanandi Naam Jaap Counter",
+    subtitle: "भक्ति, जप और साधना के इस सरल पथ से जुड़िए",
+    startLabel: "प्रारम्भ करें",
+    startDescription: "आगे बढ़ने के लिए खाता बनाइए या साइन इन कीजिए।",
+    signUp: "खाता बनाइए",
+    signIn: "साइन इन",
+    helper: "यदि आपका खाता पहले से है, तो ऊपर साइन इन करें",
+    languageLabel: "भाषा चुनें",
+  },
+};
 
 export default function PublicLanding() {
+  const { language, setLanguage } = useLanguage();
+  const copy = landingCopy[language];
+
   return (
     <View className="flex-1 overflow-hidden bg-orange-50 px-6 pb-16 pt-16">
       <View className="absolute -left-10 top-8 h-40 w-40 rounded-full bg-orange-200/60" />
@@ -11,23 +50,50 @@ export default function PublicLanding() {
 
       <View className="mb-10 rounded-[32px] border border-orange-200 bg-white/80 px-6 py-8">
         <Text
-          className="mb-3 text-center text-sm uppercase tracking-[3px] text-orange-700"
-          style={{ fontFamily: "Manrope" }}
-        >
-          स्वागत
-        </Text>
-        <Text
           className="mb-4 text-center text-4xl text-orange-950"
           style={{ fontFamily: "Sora" }}
         >
-          गोविन्द नाम जप ऐप में आपका स्वागत है
+          {copy.appTitle}
         </Text>
         <Text
           className="text-center text-base leading-7 text-orange-900/80"
           style={{ fontFamily: "Manrope" }}
         >
-          भक्ति, जप और साधना के इस सरल पथ से जुड़िए
+          {copy.subtitle}
         </Text>
+      </View>
+
+      <View className="mb-6 rounded-[24px] border border-orange-200 bg-white/80 px-5 py-4">
+        <Text
+          className="mb-3 text-sm uppercase tracking-[2px] text-orange-700"
+          style={{ fontFamily: "Manrope" }}
+        >
+          {copy.languageLabel}
+        </Text>
+        <View className="flex-row gap-x-3">
+          <TouchableOpacity
+            onPress={() => setLanguage("en")}
+            className={`flex-1 rounded-[16px] px-4 py-3 ${language === "en" ? "bg-orange-500" : "bg-orange-100"}`}
+          >
+            <Text
+              className={`text-center ${language === "en" ? "text-white" : "text-orange-900"}`}
+              style={{ fontFamily: "Sora" }}
+            >
+              English
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setLanguage("hi")}
+            className={`flex-1 rounded-[16px] px-4 py-3 ${language === "hi" ? "bg-orange-500" : "bg-orange-100"}`}
+          >
+            <Text
+              className={`text-center ${language === "hi" ? "text-white" : "text-orange-900"}`}
+              style={{ fontFamily: "Sora" }}
+            >
+              हिन्दी
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View className="mb-8 rounded-[28px] bg-orange-900 px-6 py-6">
@@ -35,13 +101,13 @@ export default function PublicLanding() {
           className="mb-2 text-sm uppercase tracking-[2px] text-orange-200"
           style={{ fontFamily: "Manrope" }}
         >
-          प्रारम्भ करें
+          {copy.startLabel}
         </Text>
         <Text
           className="text-2xl text-orange-50"
           style={{ fontFamily: "Sora" }}
         >
-          आगे बढ़ने के लिए खाता बनाइए या साइन इन कीजिए।
+          {copy.startDescription}
         </Text>
       </View>
 
@@ -52,7 +118,7 @@ export default function PublicLanding() {
               className="text-center text-lg text-white"
               style={{ fontFamily: "Sora" }}
             >
-              खाता बनाइए
+              {copy.signUp}
             </Text>
           </TouchableOpacity>
         </Link>
@@ -63,18 +129,12 @@ export default function PublicLanding() {
               className="text-center text-lg text-orange-900"
               style={{ fontFamily: "Sora" }}
             >
-              साइन इन
+              {copy.signIn}
             </Text>
           </TouchableOpacity>
         </Link>
       </View>
 
-      <Text
-        className="mt-8 text-center text-sm text-orange-800/75"
-        style={{ fontFamily: "Manrope" }}
-      >
-        यदि आपका खाता पहले से है, तो ऊपर साइन इन करें
-      </Text>
     </View>
   );
 }

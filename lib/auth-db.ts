@@ -6,6 +6,7 @@ export type UserRecord = {
   id: number;
   full_name: string;
   user_id: string;
+  mobile_number: string;
   age: number;
   gender: string;
   sampraday: string;
@@ -14,9 +15,12 @@ export type UserRecord = {
   created_at: string;
 };
 
+export type DebugUserRecord = UserRecord;
+
 export type CreateUserInput = {
   fullName: string;
   userId: string;
+  mobileNumber: string;
   age: number;
   gender: string;
   sampraday: string;
@@ -40,6 +44,98 @@ export type ChantSummary = {
   totalMalas: number;
   isActive: boolean;
 };
+
+const USER_ID_REGEX = /^[a-zA-Z0-9._-]{4,24}$/;
+const NAME_REGEX = /^[\p{L}\s.'-]{2,}$/u;
+const MOBILE_REGEX = /^[0-9]{10}$/;
+const PASSWORD_REGEX = /^[0-9]{4,}$/;
+
+function parseDob(input: string) {
+  const normalized = input.trim().replace(/\s+/g, "");
+  const match = normalized.match(/^(\d{2})[/-](\d{2})[/-](\d{4})$/);
+  if (!match) {
+    return null;
+  }
+
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  const date = new Date(year, month - 1, day);
+  const validDate =
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day;
+
+  if (!validDate) {
+    return null;
+  }
+
+  return { day, month, year, date };
+}
+
+function getAgeFromDob(dobDate: Date) {
+  const today = new Date();
+  let years = today.getFullYear() - dobDate.getFullYear();
+  const monthDiff = today.getMonth() - dobDate.getMonth();
+  const dayDiff = today.getDate() - dobDate.getDate();
+
+  if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+    years -= 1;
+  }
+
+  return years;
+}
+
+function validateCreateUserInput(input: CreateUserInput) {
+  const fullName = input.fullName.trim();
+  const userId = input.userId.trim();
+  const mobileNumber = input.mobileNumber.trim();
+  const dob = input.dob.trim();
+
+  if (!fullName || !userId || !mobileNumber || !dob || !input.password) {
+    throw new Error("कृपया सभी आवश्यक जानकारी भरें।");
+  }
+
+  if (!NAME_REGEX.test(fullName)) {
+    throw new Error("कृपया सही पूरा नाम दर्ज करें।");
+  }
+
+  if (!USER_ID_REGEX.test(userId)) {
+    throw new Error("यूज़र आईडी 4-24 अक्षरों की होनी चाहिए।");
+  }
+
+  if (!MOBILE_REGEX.test(mobileNumber)) {
+    throw new Error("कृपया सही मोबाइल नंबर दर्ज करें (10 अंक)।");
+  }
+
+  if (!Number.isInteger(input.age) || input.age < 5 || input.age > 120) {
+    throw new Error("कृपया सही आयु दर्ज करें (5 से 120 के बीच)।");
+  }
+
+  if (!input.gender.trim() || !input.sampraday.trim()) {
+    throw new Error("कृपया लिंग और सम्प्रदाय चुनें।");
+  }
+
+  const parsedDob = parseDob(dob);
+  if (!parsedDob) {
+    throw new Error("जन्म तिथि DD/MM/YYYY या DD-MM-YYYY प्रारूप में दर्ज करें।");
+  }
+
+  if (parsedDob.year < 1900 || parsedDob.date > new Date()) {
+    throw new Error("कृपया सही जन्म तिथि दर्ज करें।");
+  }
+
+  const ageFromDob = getAgeFromDob(parsedDob.date);
+  if (Math.abs(ageFromDob - input.age) > 1) {
+    throw new Error("आयु और जन्म तिथि मेल नहीं खाती।");
+  }
+
+  if (!PASSWORD_REGEX.test(input.password)) {
+    throw new Error(
+      "फिलहाल पासवर्ड केवल अंकों में रखें (कम से कम 4 अंक)।"
+    );
+  }
+}
 
 let databasePromise: Promise<SQLite.SQLiteDatabase> | null = null;
 let initialized = false;
@@ -65,6 +161,7 @@ export async function initializeAuthDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       full_name TEXT NOT NULL,
       user_id TEXT NOT NULL UNIQUE,
+      mobile_number TEXT NOT NULL UNIQUE,
       age INTEGER NOT NULL,
       gender TEXT NOT NULL,
       sampraday TEXT NOT NULL,
@@ -101,6 +198,29 @@ export async function initializeAuthDatabase() {
     );
   `);
 
+  const userColumns = await db.getAllAsync<{ name: string }>(
+    "PRAGMA table_info(users)"
+  );
+  const hasMobileColumn = userColumns.some(
+    (column) => column.name === "mobile_number"
+  );
+  if (!hasMobileColumn) {
+    await db.execAsync(
+      "ALTER TABLE users ADD COLUMN mobile_number TEXT NOT NULL DEFAULT ''"
+    );
+  }
+
+  // Backfill legacy rows that still have empty mobile_number so unique index creation won't fail.
+  await db.execAsync(`
+    UPDATE users
+    SET mobile_number = 'legacy-' || id
+    WHERE mobile_number IS NULL OR trim(mobile_number) = '';
+  `);
+
+  await db.execAsync(
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_mobile_number_unique ON users(mobile_number)"
+  );
+
   initialized = true;
   return db;
 }
@@ -132,22 +252,39 @@ export async function getUserByUserId(userId: string) {
   );
 }
 
+export async function getUserByMobileNumber(mobileNumber: string) {
+  const db = await initializeAuthDatabase();
+
+  return db.getFirstAsync<UserRecord>(
+    "SELECT * FROM users WHERE mobile_number = ? LIMIT 1",
+    [mobileNumber.trim()]
+  );
+}
+
 export async function createUser(input: CreateUserInput) {
   const db = await initializeAuthDatabase();
+  validateCreateUserInput(input);
   const normalizedUserId = input.userId.trim();
+  const normalizedMobileNumber = input.mobileNumber.trim();
 
   const existingUser = await getUserByUserId(normalizedUserId);
   if (existingUser) {
     throw new Error("यह यूज़र आईडी पहले से उपयोग में है।");
   }
 
+  const existingMobileUser = await getUserByMobileNumber(normalizedMobileNumber);
+  if (existingMobileUser) {
+    throw new Error("यह मोबाइल नंबर पहले से उपयोग में है।");
+  }
+
   await db.runAsync(
     `INSERT INTO users
-      (full_name, user_id, age, gender, sampraday, dob, password)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      (full_name, user_id, mobile_number, age, gender, sampraday, dob, password)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       input.fullName.trim(),
       normalizedUserId,
+      normalizedMobileNumber,
       input.age,
       input.gender,
       input.sampraday,
@@ -165,6 +302,37 @@ export async function signInWithCredentials(userId: string, password: string) {
   return db.getFirstAsync<UserRecord>(
     "SELECT * FROM users WHERE user_id = ? AND password = ? LIMIT 1",
     [userId.trim(), password]
+  );
+}
+
+export async function signInWithNameAndPassword(
+  fullName: string,
+  password: string
+) {
+  const db = await initializeAuthDatabase();
+
+  return db.getFirstAsync<UserRecord>(
+    `SELECT * FROM users
+     WHERE lower(trim(full_name)) = lower(trim(?))
+       AND password = ?
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [fullName.trim(), password]
+  );
+}
+
+export async function signInWithMobileAndPassword(
+  mobileNumber: string,
+  password: string
+) {
+  const db = await initializeAuthDatabase();
+
+  return db.getFirstAsync<UserRecord>(
+    `SELECT * FROM users
+     WHERE mobile_number = ?
+       AND password = ?
+     LIMIT 1`,
+    [mobileNumber.trim(), password]
   );
 }
 
@@ -333,4 +501,23 @@ export async function incrementActiveDeityChant(userId: string) {
     currentLapCount: nextCurrentLapCount,
     totalMalas: nextTotalMalas,
   };
+}
+
+export async function resetAllLocalData() {
+  const db = await initializeAuthDatabase();
+  await db.execAsync(`
+    DELETE FROM chant_progress;
+    DELETE FROM deity_preferences;
+    DELETE FROM current_session;
+    DELETE FROM users;
+  `);
+}
+
+export async function getAllUsersForDebug(): Promise<DebugUserRecord[]> {
+  const db = await initializeAuthDatabase();
+  return db.getAllAsync<DebugUserRecord>(
+    `SELECT *
+     FROM users
+     ORDER BY datetime(created_at) DESC, id DESC`
+  );
 }

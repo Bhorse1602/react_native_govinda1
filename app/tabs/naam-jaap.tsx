@@ -5,7 +5,8 @@ import {
   type ChantSummary,
   type UserRecord,
 } from "@/lib/auth-db";
-import { getHindiDeityName } from "@/lib/deity-display";
+import { getDeityDisplayName } from "@/lib/deity-display";
+import { useLanguage } from "@/lib/language-context";
 import { useIsFocused } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
@@ -21,6 +22,7 @@ import {
 } from "react-native";
 
 export default function NaamJaap() {
+  const { language } = useLanguage();
   const isFocused = useIsFocused();
   const pulse = useRef(new Animated.Value(0)).current;
   const [currentUser, setCurrentUser] = useState<UserRecord | null>(null);
@@ -66,17 +68,13 @@ export default function NaamJaap() {
   }, [isFocused]);
 
   const deityName = useMemo(
-    () => getHindiDeityName(activeSummary?.deityName ?? ""),
-    [activeSummary?.deityName]
+    () => getDeityDisplayName(activeSummary?.deityName ?? "", language),
+    [activeSummary?.deityName, language]
   );
 
   const progressPercent = activeSummary
     ? (activeSummary.currentLapCount / 108) * 100
     : 0;
-  const completedSegments = Math.min(
-    12,
-    Math.floor((activeSummary.currentLapCount / 108) * 12)
-  );
 
   async function handleJaap() {
     if (!currentUser || saving) {
@@ -100,8 +98,12 @@ export default function NaamJaap() {
       setActiveSummary(summary);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "जप की गिनती अपडेट नहीं हो पाई।";
-      Alert.alert("जप असफल", message);
+        error instanceof Error
+          ? error.message
+          : language === "hi"
+            ? "जप की गिनती अपडेट नहीं हो पाई।"
+            : "Could not update chant count.";
+      Alert.alert(language === "hi" ? "जप असफल" : "Chant failed", message);
     } finally {
       setSaving(false);
     }
@@ -148,7 +150,7 @@ export default function NaamJaap() {
             className="text-base text-orange-50"
             style={{ fontFamily: "NotoSansDevanagari_700Bold" }}
           >
-            वापस
+            {language === "hi" ? "वापस" : "Back"}
           </Text>
         </Pressable>
         <View className="rounded-full bg-white/15 px-5 py-3">
@@ -156,7 +158,7 @@ export default function NaamJaap() {
             className="text-base text-orange-50"
             style={{ fontFamily: "NotoSansDevanagari_700Bold" }}
           >
-            माला {activeSummary.totalMalas}
+            {language === "hi" ? "माला" : "Mala"} {activeSummary.totalMalas}
           </Text>
         </View>
       </View>
@@ -184,7 +186,7 @@ export default function NaamJaap() {
           className="mb-3 text-sm text-orange-100/85"
           style={{ fontFamily: "NotoSansDevanagari_700Bold" }}
         >
-          जप सारांश
+          {language === "hi" ? "जप सारांश" : "Jaap Summary"}
         </Text>
         <View className="flex-row gap-3">
           <View className="flex-1 rounded-2xl bg-white/10 px-4 py-3">
@@ -192,7 +194,7 @@ export default function NaamJaap() {
               className="text-xs text-orange-100/80"
               style={{ fontFamily: "NotoSansDevanagari_400Regular" }}
             >
-              कुल जप (Total Count)
+              {language === "hi" ? "कुल जप" : "Total chants"}
             </Text>
             <Text
               className="mt-1 text-2xl text-orange-50"
@@ -206,7 +208,7 @@ export default function NaamJaap() {
               className="text-xs text-orange-100/80"
               style={{ fontFamily: "NotoSansDevanagari_400Regular" }}
             >
-              पूरी मालाएं
+              {language === "hi" ? "पूरी मालाएं" : "Completed malas"}
             </Text>
             <Text
               className="mt-1 text-2xl text-orange-50"
@@ -223,7 +225,7 @@ export default function NaamJaap() {
           className="text-sm text-orange-100/80"
           style={{ fontFamily: "NotoSansDevanagari_400Regular" }}
         >
-          माला प्रगति (Current Loop)
+          {language === "hi" ? "माला प्रगति" : "Mala progress"}
         </Text>
         <View className="mb-4 mt-2 h-3 overflow-hidden rounded-full bg-orange-100/20">
           <View

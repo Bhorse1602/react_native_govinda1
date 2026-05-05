@@ -24,3 +24,10 @@ export function getHindiDeityName(name: string) {
   const normalized = name.trim().toLowerCase().replace(/\s+/g, " ");
   return HINDI_DEITY_NAMES[normalized] ?? name;
 }
+
+export function getDeityDisplayName(name: string, language: "en" | "hi") {
+  if (language === "hi") {
+    return getHindiDeityName(name);
+  }
+  return name;
+}
