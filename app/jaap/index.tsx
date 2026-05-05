@@ -19,6 +19,7 @@ import {
   Text,
   View,
 } from "react-native";
+import BannerAd from "@/components/BannerAd";
 
 export default function JaapScreen() {
   const isFocused = useIsFocused();
@@ -127,7 +128,7 @@ export default function JaapScreen() {
   return (
     <Pressable
       onPress={handleJaap}
-      className="flex-1 overflow-hidden bg-[#7c2d12] px-6 pb-28 pt-16"
+      className="flex-1 overflow-hidden bg-[#7c2d12] px-6 pb-8 pt-16"
     >
       <View className="absolute inset-0 bg-orange-950" />
       <View className="absolute left-[-90px] top-[-80px] h-72 w-72 rounded-full bg-orange-500/25" />
@@ -212,6 +213,14 @@ export default function JaapScreen() {
             </Text>
           </View>
         </View>
+      </View>
+      
+      {/* Banner Ad at bottom */}
+      <View className="mt-4 px-2">
+        <BannerAd
+          containerStyle={{ marginHorizontal: 0 }}
+          showPlaceholder={true}
+        />
       </View>
     </Pressable>
   );

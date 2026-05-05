@@ -1,10 +1,12 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { getCurrentSessionUser } from "@/lib/auth-db";
+import { useLanguage } from "@/lib/language-context";
 import { Redirect, Tabs, usePathname } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View, Text, BackHandler, Platform } from "react-native";
 
 export default function TabsLayout() {
+  const { language } = useLanguage();
   const pathname = usePathname();
   const [hasSession, setHasSession] = useState<boolean | null>(null);
   const [currentUserFullName, setCurrentUserFullName] = useState<string | null>(null);
@@ -58,15 +60,7 @@ export default function TabsLayout() {
 
   return (
     <>
-      {showUserHeader ? (
-        <View className="absolute left-0 right-0 top-8 z-10 items-center">
-          <View className="rounded-full bg-white/90 px-4 py-2 shadow-sm">
-            <Text className="text-lg text-orange-900" style={{ fontFamily: "Sora" }}>
-              {currentUserFullName ? `साधक: ${currentUserFullName}` : ""}
-            </Text>
-          </View>
-        </View>
-      ) : null}
+      {/* Devotee name header removed as per user request - no transparent bubble */}
 
       <Tabs
         screenOptions={({ route }) => ({
@@ -137,32 +131,32 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: "Home",
+            title: language === "hi" ? "गृह" : "Home",
           }}
         />
         <Tabs.Screen
           name="prashnavali"
           options={{
-            title: "प्रश्नावली",
+            title: language === "hi" ? "प्रश्नावली" : "Prashnavali",
           }}
         />
         <Tabs.Screen
           name="naam-jaap"
           options={{
             href: null,
-            title: "नाम जप",
+            title: language === "hi" ? "नाम जप" : "Naam Jaap",
           }}
         />
         <Tabs.Screen
           name="insights"
           options={{
-            title: "Insights",
+            title: language === "hi" ? "जानकारी" : "Insights",
           }}
         />
         <Tabs.Screen
           name="setting"
           options={{
-            title: "Setting",
+            title: language === "hi" ? "सेटिंग्स" : "Settings",
           }}
         />
       </Tabs>

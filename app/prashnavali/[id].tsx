@@ -1,11 +1,13 @@
 import React from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { useLanguage } from "@/lib/language-context";
 
 import PRASHNAVALI from "../data/prashnavali.json";
 
 
 export default function PrashnavaliDetail() {
+  const { language } = useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const content = (PRASHNAVALI as any).find((p: any) => p.id === id) ?? (PRASHNAVALI as any)[0];
   const fullChaupai = Array.isArray(content.chaupaiLines) ? content.chaupaiLines.join('\n') : (content.body ?? '');
@@ -24,14 +26,14 @@ export default function PrashnavaliDetail() {
           className="self-start rounded-full bg-orange-100 px-4 py-2"
         >
           <Text className="text-orange-900" style={{ fontFamily: "NotoSansDevanagari_700Bold" }}>
-            वापस
+            {language === "hi" ? "वापस" : "Back"}
           </Text>
         </TouchableOpacity>
       </View>
 
       <View className="rounded-[30px] border border-orange-200 bg-white/85 px-6 py-8">
         <Text className="mb-2 text-sm uppercase tracking-[3px] text-orange-700" style={{ fontFamily: "NotoSansDevanagari_400Regular" }}>
-          प्रश्नावली
+          {language === "hi" ? "प्रश्नावली" : "Prashnavali"}
         </Text>
         <Text className="mb-4 text-3xl text-orange-950" style={{ fontFamily: "NotoSansDevanagari_700Bold" }}>
           {content.title}

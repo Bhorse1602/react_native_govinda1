@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useRef } from "react";
 import { router } from "expo-router";
+import { useLanguage } from "@/lib/language-context";
 import {
   View,
   Text,
@@ -15,8 +16,9 @@ import {
   Animated,
   Easing,
 } from "react-native";
+import AnimatedPath from "@/components/AnimatedPath";
 
-// Canonical 15x15 Ram Shalaka grid (provided)
+// Canonical 15x15 grid (provided)
 const ramShalakaGrid = [
   ["सु", "प्र", "उ", "बि", "हो", "मु", "ग", "ब", "सु", "नु", "बि", "घ", "धि", "इ", "द"],
   ["र", "रु", "फ", "सि", "सि", "रें", "बस", "है", "मं", "ल", "न", "ल", "य", "न", "अं"],
@@ -37,7 +39,7 @@ const ramShalakaGrid = [
 
 const GRID_15x15: string[] = ramShalakaGrid.flat();
 
-// 9 canonical chaupais for Ram Shalaka Prashnavali (kept as provided)
+// 9 canonical chaupais for Prashnavali (kept as provided)
 const CHAUPAIS = [
   { id: 1, devanagari: "सुनु सिय सत्य असीस हमारी। पूजहि मन कामना तुम्हारी॥", roman: "Sunu siya satya asis hamari, pujahi mana kamana tumhari", meaning: "Listen Sita, my blessing is true. Worship with sincerity and your wishes shall be fulfilled.", source: "Bal Kand", interpretation: "Very Positive", color: "green" },
   { id: 2, devanagari: "प्रबिसि नगर कीजे सब काजा। हृदय राखि कोसलपुर राजा॥", roman: "Prabisi nagar kijey sab kaja, hriday rakhi kosalpur raja", meaning: "Enter the city and do all tasks while keeping the King of Kosala (Lord Ram) in your heart.", source: "Sundar Kand", interpretation: "Positive", color: "green" },
@@ -49,6 +51,27 @@ const CHAUPAIS = [
   { id: 8, devanagari: "बरुन कुबेर सुरेस समीरा। रण सनमुख धरि काह न धीरा॥", roman: "Varun kuber sures samira, ran sanmukh dhari kah na dhira", meaning: "Even gods like Varun, Kuber, Indra and Vayu could not face him in battle.", source: "Lanka Kand", interpretation: "Caution / Doubtful", color: "orange" },
   { id: 9, devanagari: "सुफल मनोरथ होहुँ तुम्हारे। राम लखनु सुनि भए सुखारे॥", roman: "Sufal manorath hohu tumhare, ramu lakhanu suni bhaye sukhare", meaning: "May your desires be fulfilled. Ram and Lakshman became happy on hearing this.", source: "Bal Kand", interpretation: "Very Positive", color: "green" }
 ];
+
+const HINDI_MEANINGS: Record<number, string> = {
+  1: "हे सीता, मेरी यह सच्ची आशीष सुनो। श्रद्धा से पूजन करने पर तुम्हारी मनोकामना पूर्ण होगी।",
+  2: "हृदय में कोसलपुर के राजा श्रीराम को धारण करके नगर में प्रवेश करो और सभी कार्य सिद्ध होंगे।",
+  3: "अंततः यह कार्य टिकेगा नहीं; जैसे कालनेमि और रावण का नाश हुआ, वैसे ही असत्य का निबाह नहीं होता।",
+  4: "विधि के कारण सज्जन भी कभी कुसंग में पड़ सकते हैं, पर वे सर्प-मणि की तरह अपना गुण बनाए रखते हैं।",
+  5: "जो कुछ श्रीराम ने रचा है वही होगा; व्यर्थ तर्क बढ़ाने से लाभ नहीं।",
+  6: "संतों का समाज आनंद और मंगल से भरा है, जैसे जगत में चलता-फिरता तीर्थराज।",
+  7: "भगवान की कृपा से विष अमृत बन जाता है, शत्रु मित्र बन जाता है, समुद्र लघु हो जाता है और अग्नि भी शीतल हो जाती है।",
+  8: "वरुण, कुबेर, इंद्र, वायु जैसे देव भी उसके सम्मुख स्थिर न रह सके; इसलिए सावधानी और धैर्य आवश्यक है।",
+  9: "तुम्हारी मनोकामना सफल हो; यह सुनकर श्रीराम और लक्ष्मण प्रसन्न हुए।",
+};
+
+const HINDI_INTERPRETATION: Record<string, string> = {
+  "Very Positive": "अत्यंत शुभ",
+  Positive: "शुभ",
+  "Caution / Negative": "सावधानी / अशुभ",
+  Caution: "सावधानी",
+  "Neutral / Surrender to God": "तटस्थ / ईश्वर समर्पण",
+  "Caution / Doubtful": "सावधानी / संदिग्ध",
+};
 
 function computeSequenceFromIndex(startIndex: number) {
   // Start at startIndex (0..224), take every 9th akshar, wrap around, until back to start.
@@ -133,6 +156,7 @@ function pickChaupaiForStartIndex(startIndex: number, formed?: string) {
 }
 
 export default function PrashnavaliTab() {
+  const { language } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [selectedResult, setSelectedResult] = useState<null | any>(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -160,39 +184,25 @@ export default function PrashnavaliTab() {
     positionsRef.current[idx] = { x: x + width / 2, y: y + height / 2 };
   }
 
-  function renderConnectionLines(indices: number[]) {
-    // render animated thin views between consecutive centers
+  function renderSVGLines(indices: number[]) {
+    // Convert indices to points for SVG
     if (!indices || indices.length < 2) return null;
-    return indices.slice(0, -1).map((fromIdx, i) => {
-      const toIdx = indices[i + 1];
-      const a = positionsRef.current[fromIdx];
-      const b = positionsRef.current[toIdx];
-      const dx = b.x - a.x;
-      const dy = b.y - a.y;
-      const length = Math.sqrt(dx * dx + dy * dy);
-      const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
-      const left = a.x + dx / 2 - length / 2;
-      const top = a.y + dy / 2 - 2; // line thickness ~4
-      return (
-        <Animated.View
-          key={`line-${fromIdx}-${toIdx}`}
-          style={{
-            position: "absolute",
-            left,
-            top,
-            width: length,
-            height: 4,
-            backgroundColor: "rgba(250,204,21,0.95)",
-            borderRadius: 4,
-            transform: [{ rotate: `${angle}deg` }],
-            zIndex: 5,
-            shadowColor: "#f59e0b",
-            shadowOpacity: 0.6,
-            shadowRadius: 8,
-          }}
-        />
-      );
-    });
+    const points = indices.map(idx => positionsRef.current[idx]).filter(p => p.x !== 0 || p.y !== 0);
+    if (points.length < 2) return null;
+    return (
+      <AnimatedPath
+        points={points}
+        strokeColor="#FFD700"
+        strokeWidth={4}
+        segmentDuration={300}
+        segmentDelay={150}
+        curved={true}
+        curveIntensity={0.3}
+        glow={true}
+        autoPlay={true}
+        onAnimationComplete={() => console.log('Line animation complete')}
+      />
+    );
   }
 
   async function runSequenceAnimation(indices: number[]) {
@@ -262,7 +272,12 @@ export default function PrashnavaliTab() {
       setSelectedResult({ startIndex: index, formed, chaupai, indices });
       setModalVisible(true);
     } catch (e) {
-      Alert.alert("त्रुटि", "पढ़ने में समस्या हुई। कृपया पुनः प्रयास करें。");
+      Alert.alert(
+        language === "hi" ? "त्रुटि" : "Error",
+        language === "hi"
+          ? "पढ़ने में समस्या हुई। कृपया पुनः प्रयास करें।"
+          : "There was a problem while reading. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -319,66 +334,85 @@ export default function PrashnavaliTab() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff7ed", paddingHorizontal: 16, paddingTop: 24, paddingBottom: 28 }}>
-      <View style={{ marginTop: 18, marginBottom: 10, flexDirection: "row", justifyContent: "flex-start" }}>
-        <TouchableOpacity
-          onPress={goBackOrHome}
-          style={{ borderRadius: 999, backgroundColor: "#ffedd5", paddingHorizontal: 14, paddingVertical: 8 }}
-        >
-          <Text style={{ fontFamily: "NotoSansDevanagari_700Bold", color: "#9a3412" }}>वापस</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={{ alignItems: "center", marginBottom: 8 }}>
-        <Text style={[styles.headerTitle, { fontFamily: "NotoSansDevanagari_700Bold" }]}>श्री राम शलाका प्रश्नावली</Text>
-        <Text style={[styles.instructions, { fontFamily: "NotoSansDevanagari_400Regular" }]}>आँखें बंद करें, श्री राम का ध्यान करें, और किसी भी अक्षर को स्पर्श करें।</Text>
-      </View>
-
-      <View style={{ position: "relative" }}>
-        {/* grid container */}
-        <View style={styles.gridContainer}>
-          {GRID_15x15.map((akshar, idx) => {
-            const av = animatedValuesRef.current[idx];
-            const scale = av.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] });
-            const borderWidth = av.interpolate({ inputRange: [0, 1], outputRange: [0, 3] });
-            const isBright = selectedIndices.includes(idx) || animating && selectedIndices.includes(idx);
-            const opacity = animating ? (selectedIndices.includes(idx) ? 1 : 0.35) : 1;
-            return (
-              <Animated.View
-                key={`${akshar}-${idx}`}
-                onLayout={(e) => onCellLayout(idx, e)}
-                style={[
-                  styles.cell,
-                  { width: cellSize, height: cellSize, transform: [{ scale }], opacity, borderColor: isBright ? "#f59e0b" : "#fcd34d", borderWidth: isBright ? 3 : 1 },
-                ]}
-              >
-                <TouchableOpacity
-                  style={{ flex: 1, alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}
-                  onPress={() => handleCellPress(idx)}
-                  disabled={animating}
-                >
-                  <Text style={{ fontFamily: "NotoSansDevanagari_400Regular", fontSize: 14, color: "#92400e" }}>{akshar}</Text>
-                </TouchableOpacity>
-              </Animated.View>
-            );
-          })}
-        </View>
-
-        {/* connection lines overlay (absolute) */}
-        <View style={{ position: "absolute", left: 16, right: 16, top: 0, bottom: 0, pointerEvents: "none" }}>
-          {renderConnectionLines(selectedIndices)}
-        </View>
-      </View>
-
-      <Text style={[styles.disclaimer, { fontFamily: "NotoSansDevanagari_400Regular" }]}>यह एक श्रद्धाभाव से किया जाने वाला साधना-आधारित उपकरण है। परिणाम मार्गदर्शक हैं।</Text>
-
-      <View style={{ flexDirection: "row", justifyContent: "center", marginTop: 8, gap: 8 }}>
-        {lastIndices ? (
-          <TouchableOpacity onPress={replayAnimation} style={[styles.smallButton, { backgroundColor: "#fde68a" }]}>
-            <Text style={{ fontFamily: "NotoSansDevanagari_700Bold", color: "#92400e" }}>Replay Animation</Text>
+    <View style={{ flex: 1, backgroundColor: "#fff7ed" }}>
+      <ScrollView
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 24, paddingBottom: 28 }}
+        showsVerticalScrollIndicator={true}
+      >
+        <View style={{ marginTop: 18, marginBottom: 10, flexDirection: "row", justifyContent: "flex-start" }}>
+          <TouchableOpacity
+            onPress={goBackOrHome}
+            style={{ borderRadius: 999, backgroundColor: "#ffedd5", paddingHorizontal: 14, paddingVertical: 8 }}
+          >
+            <Text style={{ fontFamily: "NotoSansDevanagari_700Bold", color: "#9a3412" }}>
+              {language === "hi" ? "वापस" : "Back"}
+            </Text>
           </TouchableOpacity>
-        ) : null}
-      </View>
+        </View>
+
+        <View style={{ alignItems: "center", marginBottom: 8 }}>
+          <Text style={[styles.headerTitle, { fontFamily: "NotoSansDevanagari_700Bold" }]}>
+            {language === "hi" ? "श्री प्रश्नावली" : "Shri Prashnavali"}
+          </Text>
+          <Text style={[styles.instructions, { fontFamily: "NotoSansDevanagari_400Regular" }]}>
+            {language === "hi"
+              ? "आँखें बंद करें, श्री राम का ध्यान करें, और किसी भी अक्षर को स्पर्श करें।"
+              : "Close your eyes, meditate on Shri Ram, and touch any letter."}
+          </Text>
+        </View>
+
+        <View style={{ position: "relative" }}>
+          {/* grid container */}
+          <View style={styles.gridContainer}>
+            {GRID_15x15.map((akshar, idx) => {
+              const av = animatedValuesRef.current[idx];
+              const scale = av.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] });
+              const borderWidth = av.interpolate({ inputRange: [0, 1], outputRange: [0, 3] });
+              const isBright = selectedIndices.includes(idx) || animating && selectedIndices.includes(idx);
+              const opacity = animating ? (selectedIndices.includes(idx) ? 1 : 0.35) : 1;
+              return (
+                <Animated.View
+                  key={`${akshar}-${idx}`}
+                  onLayout={(e) => onCellLayout(idx, e)}
+                  style={[
+                    styles.cell,
+                    { width: cellSize, height: cellSize, transform: [{ scale }], opacity, borderColor: isBright ? "#f59e0b" : "#fcd34d", borderWidth: isBright ? 3 : 1 },
+                  ]}
+                >
+                  <TouchableOpacity
+                    style={{ flex: 1, alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}
+                    onPress={() => handleCellPress(idx)}
+                    disabled={animating}
+                  >
+                    <Text style={{ fontFamily: "NotoSansDevanagari_400Regular", fontSize: 14, color: "#92400e" }}>{akshar}</Text>
+                  </TouchableOpacity>
+                </Animated.View>
+              );
+            })}
+          </View>
+
+          {/* connection lines overlay (absolute) */}
+          <View style={{ position: "absolute", left: 16, right: 16, top: 0, bottom: 0, pointerEvents: "none" }}>
+            {renderSVGLines(selectedIndices)}
+          </View>
+        </View>
+
+        <Text style={[styles.disclaimer, { fontFamily: "NotoSansDevanagari_400Regular" }]}>
+          {language === "hi"
+            ? "यह एक श्रद्धाभाव से किया जाने वाला साधना-आधारित उपकरण है। परिणाम मार्गदर्शक हैं।"
+            : "This is a devotion-based guidance tool. Results are indicative."}
+        </Text>
+
+        <View style={{ flexDirection: "row", justifyContent: "center", marginTop: 8, gap: 8 }}>
+          {lastIndices ? (
+            <TouchableOpacity onPress={replayAnimation} style={[styles.smallButton, { backgroundColor: "#fde68a" }]}>
+              <Text style={{ fontFamily: "NotoSansDevanagari_700Bold", color: "#92400e" }}>
+                {language === "hi" ? "एनीमेशन दोहराएँ" : "Replay Animation"}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      </ScrollView>
 
       <Modal visible={modalVisible} animationType="slide" transparent>
         <TouchableWithoutFeedback onPress={() => {}}>
@@ -389,32 +423,58 @@ export default function PrashnavaliTab() {
               ) : selectedResult ? (
                 <ScrollView>
                   <Text style={[styles.modalTitle, { fontFamily: "NotoSansDevanagari_700Bold" }]}>{selectedResult.chaupai.devanagari}</Text>
-                  <Text style={[styles.sourceText, { fontFamily: "NotoSansDevanagari_400Regular" }]}>स्रोत: {selectedResult.chaupai.source}</Text>
+                  <Text style={[styles.sourceText, { fontFamily: "NotoSansDevanagari_400Regular" }]}>
+                    {language === "hi" ? "स्रोत" : "Source"}: {selectedResult.chaupai.source}
+                  </Text>
 
                   <View style={styles.interpretRow}>
                     <View style={[styles.badge, { backgroundColor: interpretationColor(selectedResult.chaupai.interpretation) }]}>
-                      <Text style={[styles.badgeText, { fontFamily: "NotoSansDevanagari_400Regular" }]}>{selectedResult.chaupai.interpretation}</Text>
+                      <Text style={[styles.badgeText, { fontFamily: "NotoSansDevanagari_400Regular" }]}>
+                        {language === "hi"
+                          ? (HINDI_INTERPRETATION[selectedResult.chaupai.interpretation] ?? selectedResult.chaupai.interpretation)
+                          : selectedResult.chaupai.interpretation}
+                      </Text>
                     </View>
                   </View>
 
-                  <Text style={[styles.translation, { fontFamily: "NotoSansDevanagari_400Regular" }]}>{selectedResult.chaupai.meaning}</Text>
+                  <Text style={[styles.translation, { fontFamily: "NotoSansDevanagari_400Regular" }]}>
+                    {language === "hi"
+                      ? (HINDI_MEANINGS[selectedResult.chaupai.id] ?? selectedResult.chaupai.meaning)
+                      : selectedResult.chaupai.meaning}
+                  </Text>
 
-                  <Text style={[styles.explanationTitle, { fontFamily: "NotoSansDevanagari_700Bold" }]}>व्याख्या</Text>
-                  <Text style={[styles.explanation, { fontFamily: "NotoSansDevanagari_400Regular" }]}>{selectedResult.chaupai.meaning}</Text>
+                  <Text style={[styles.explanationTitle, { fontFamily: "NotoSansDevanagari_700Bold" }]}>
+                    {language === "hi" ? "व्याख्या" : "Explanation"}
+                  </Text>
+                  <Text style={[styles.explanation, { fontFamily: "NotoSansDevanagari_400Regular" }]}>
+                    {language === "hi"
+                      ? (HINDI_MEANINGS[selectedResult.chaupai.id] ?? selectedResult.chaupai.meaning)
+                      : selectedResult.chaupai.meaning}
+                  </Text>
 
                   <View style={styles.modalButtons}>
                     <TouchableOpacity onPress={handleShare} style={styles.actionButton}>
-                      <Text style={{ color: "white", fontFamily: "NotoSansDevanagari_700Bold" }}>शेयर करें</Text>
+                      <Text style={{ color: "white", fontFamily: "NotoSansDevanagari_700Bold" }}>
+                        {language === "hi" ? "शेयर करें" : "Share"}
+                      </Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={handleHomeFromResult} style={[styles.actionButton, { backgroundColor: "#f97316" }]}>
-                      <Text style={{ color: "white", fontFamily: "NotoSansDevanagari_700Bold" }}>होम जाएं</Text>
+                      <Text style={{ color: "white", fontFamily: "NotoSansDevanagari_700Bold" }}>
+                        {language === "hi" ? "होम जाएं" : "Go Home"}
+                      </Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={resetReading} style={[styles.actionButton, { backgroundColor: "#f3f4f6" }] }>
-                      <Text style={{ color: "#92400e", fontFamily: "NotoSansDevanagari_700Bold" }}>नई पठन</Text>
+                      <Text style={{ color: "#92400e", fontFamily: "NotoSansDevanagari_700Bold" }}>
+                        {language === "hi" ? "नई पठन" : "New Reading"}
+                      </Text>
                     </TouchableOpacity>
                   </View>
 
-                  <Text style={[styles.reminder, { fontFamily: "NotoSansDevanagari_400Regular" }]}>एक ही प्रश्न को 24 घंटे बाद ही पुनः पूछें।</Text>
+                  <Text style={[styles.reminder, { fontFamily: "NotoSansDevanagari_400Regular" }]}>
+                    {language === "hi"
+                      ? "एक ही प्रश्न को 24 घंटे बाद ही पुनः पूछें।"
+                      : "Repeat the same question only after 24 hours."}
+                  </Text>
                 </ScrollView>
               ) : null}
             </View>

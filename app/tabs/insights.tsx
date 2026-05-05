@@ -3,11 +3,13 @@ import {
   getCurrentSessionUser,
   type ChantSummary,
 } from "@/lib/auth-db";
+import { useLanguage } from "@/lib/language-context";
 import { useIsFocused } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 
 export default function Insights() {
+  const { language } = useLanguage();
   const isFocused = useIsFocused();
   const [summaries, setSummaries] = useState<ChantSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,26 +55,30 @@ export default function Insights() {
           className="mb-2 text-sm uppercase tracking-[3px] text-orange-700"
           style={{ fontFamily: "Manrope" }}
         >
-          जानकारी
+          {language === "hi" ? "जानकारी" : "Insights"}
         </Text>
         <Text
           className="mb-4 text-3xl text-orange-950"
           style={{ fontFamily: "Sora" }}
         >
-          जप अवलोकन
+          {language === "hi" ? "जप अवलोकन" : "Jaap Overview"}
         </Text>
         <Text
           className="text-base leading-7 text-orange-900/80"
           style={{ fontFamily: "Manrope" }}
         >
-          प्रत्येक इष्ट नाम के लिए लोकल डेटाबेस में सहेजे गए जप और माला की प्रगति यहाँ देखें।
+          {language === "hi"
+            ? "प्रत्येक इष्ट नाम के लिए लोकल डेटाबेस में सहेजे गए जप और माला की प्रगति यहाँ देखें।"
+            : "View chant and mala progress saved in local database for each deity."}
         </Text>
       </View>
 
       <View className="mt-6 gap-y-4">
         {loading ? (
           <View className="rounded-[28px] bg-amber-100 px-6 py-6">
-            <Text style={{ fontFamily: "Manrope" }}>जानकारी लोड हो रही है...</Text>
+            <Text style={{ fontFamily: "Manrope" }}>
+              {language === "hi" ? "जानकारी लोड हो रही है..." : "Loading insights..."}
+            </Text>
           </View>
         ) : (
           summaries.map((summary) => (
@@ -90,26 +96,26 @@ export default function Insights() {
                 className="text-base leading-7 text-orange-800/85"
                 style={{ fontFamily: "Manrope" }}
               >
-                कुल जप: {summary.totalChants}
+                {language === "hi" ? "कुल जप" : "Total chants"}: {summary.totalChants}
               </Text>
               <Text
                 className="text-base leading-7 text-orange-800/85"
                 style={{ fontFamily: "Manrope" }}
               >
-                वर्तमान माला: {summary.currentLapCount} / 108
+                {language === "hi" ? "वर्तमान माला" : "Current mala"}: {summary.currentLapCount} / 108
               </Text>
               <Text
                 className="text-base leading-7 text-orange-800/85"
                 style={{ fontFamily: "Manrope" }}
               >
-                कुल माला: {summary.totalMalas}
+                {language === "hi" ? "कुल माला" : "Total malas"}: {summary.totalMalas}
               </Text>
               {summary.isActive ? (
                 <Text
                   className="mt-2 text-sm uppercase tracking-[2px] text-orange-700"
                   style={{ fontFamily: "Manrope" }}
                 >
-                  सक्रिय इष्ट
+                  {language === "hi" ? "सक्रिय इष्ट" : "Active deity"}
                 </Text>
               ) : null}
             </View>
